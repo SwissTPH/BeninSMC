@@ -21,4 +21,5 @@ Scripts to generate results and figures
 ## Resources
 
 [OpenMalaria code](https://github.com/SwissTPH/openmalaria)
+
 [OpenMalariaUtilities package](https://github.com/SwissTPH/r-openMalariaUtilities)

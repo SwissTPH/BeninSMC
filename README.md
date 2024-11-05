@@ -20,6 +20,6 @@ Scripts to generate results and figures
 
 ## Resources
 
-[OpenMalaria code](https://github.com/SwissTPH/openmalaria)
+[OpenMalaria code](https://github.com/SwissTPH/openmalaria) and [documentation](https://github.com/SwissTPH/openmalaria/wiki)
 
 [OpenMalariaUtilities package](https://github.com/SwissTPH/r-openMalariaUtilities)

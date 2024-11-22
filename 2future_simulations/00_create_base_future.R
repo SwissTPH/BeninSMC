@@ -80,7 +80,7 @@ create_baseList = function(country_name, expName,
   
   ## Define future standard weak nets
   setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-  source("netdurability.R")
+  source("../0modelling_parameters/netdurability.R")
   ## P2: PermaNet 2.0; DN: DuraNet
   
   baseList <- define_ITN_compat(

@@ -91,6 +91,10 @@ dat= convert_access(dat,pattern="EffCov14d",katya=F,scale=1)
 #####################################
 # Defining the simulation scenarios
 #####################################
+
+prop_Gambiae <- .9
+source("../0modelling_parameters/indoor_outdoor_exposure.R")
+
 # Define the list with all the scenario variations per country
 # (population size, seed, EIR)
 full             = list()
@@ -99,10 +103,10 @@ full $ setting   = unique(dat$setting)
 full $ pop       = 3000L
 full$EIR = c(1:10,seq(12,250,2))
 full$futITNcov=0
-full$fin = .08
-full$fout = .02
-full$gin = .81
-full$gout = .09
+full$gin = prop_Gambiae*exposure_Gambiae$Exposure_Indoor_total
+full$gout = prop_Gambiae*exposure_Gambiae$Exposure_Outdoor_total
+full$fin = (1-prop_Gambiae)*exposure_Funestus$Exposure_Indoor_total
+full$fout = (1-prop_Gambiae)*exposure_Funestus$Exposure_Outdoor_total
 
 #### 'scens' will contain all possible combinations of these scenario variations
 scens = expand.grid( full ) %>%

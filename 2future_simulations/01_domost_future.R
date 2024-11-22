@@ -127,6 +127,8 @@ dat_calib=dat %>%
 # Defining the simulation scenarios
 #####################################
 
+prop_Gambiae <- .9
+source("../0modelling_parameters/indoor_outdoor_exposure.R")
 
 # Define the list with all the scenario variations per country
 # (population size, seed, EIR)
@@ -135,10 +137,11 @@ full $ seed      = 1:10
 full $ setting   = unique(dat_calib$setting)
 #in 2024, with 3.51% growth rate from 2013 census, smallest population is Toukoutouna with 58000 inhabitants
 full $ pop       = 50000L
-full$fin = .08
-full$fout = .02
-full$gin = .81
-full$gout = .09
+full$gin = prop_Gambiae*exposure_Gambiae$Exposure_Indoor_total
+full$gout = prop_Gambiae*exposure_Gambiae$Exposure_Outdoor_total
+full$fin = (1-prop_Gambiae)*exposure_Funestus$Exposure_Indoor_total
+full$fout = (1-prop_Gambiae)*exposure_Funestus$Exposure_Outdoor_total
+
 
 full$futITNtype2020="P2"
 full$futITNtype2023=c("P2","DN")
@@ -271,26 +274,6 @@ slurmPrepareSimulations(expName = expName, scenarios = scens,
                         rModule = "R/4.2.1-foss-2022a",
                         omModule = "OpenMalaria/44.0-intel-compilers-2023.1.0"
 )
-
-# # If not all OpenMalaria simulations have run
-# 
-# ## find those missing
-# missing <- read.table(paste0(experiment_folder,"/missing_om_simulations.txt")) %>%
-#   rename(ID = "V1") %>%
-#   mutate(ID = gsub(paste0(expName,"_"),"",ID)) %>%
-#   mutate(ID = as.double(gsub("_out.txt","",ID)))
-# #paste0(missing$ID,collapse=",")
-# scens=readRDS(file.path(experiment_folder, "cache/scenarios.rds"))
-# 
-# ## new bash file only for those missing
-# scens_missing <- missing %>% left_join(scens)
-# 
-# slurmPrepareSimulations(expName = expName, scenarios = scens_missing,
-#                         memCPU = "10GB", nCPU =50,bSize = 200,
-#                         time = "04:00:00", qos = "6hours",
-#                         rModule = "R/4.2.1-foss-2022a",
-#                         omModule = "OpenMalaria/44.0-intel-compilers-2023.1.0"
-# )
 
 ## 3. Prepare the scripts for post-processing the OpenMalaria outputs
 # Define the age groups of interest for the outputs (including aggregations)

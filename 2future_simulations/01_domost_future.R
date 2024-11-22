@@ -143,16 +143,16 @@ full$fin = (1-prop_Gambiae)*exposure_Funestus$Exposure_Indoor_total
 full$fout = (1-prop_Gambiae)*exposure_Funestus$Exposure_Outdoor_total
 
 
-full$futITNtype2020="P2"
-full$futITNtype2023=c("P2","DN")
-full$futITNtype2026=c("futITNWeakP2","futPBOP2")
-full$futITNuse=c("current","opt")
+full$futITNtype2020 = "P2"
+full$futITNtype2023 = c("P2","DN")
+full$futITNtype2026 = c("futITNWeakP2","futPBOP2")
+full$futITNuse = "current"
 
-full$recentIRScov2020=c(0,.9)
-full$recentIRScov2021=c(0,.9)
+full$recentIRScov2020 = c(0,.9)
+full$recentIRScov2021 = c(0,.9)
 
-full$futcovSMC0to5=c(0,.8)
-full$futcovSMC0to10=c(0,.8)
+full$futcovSMC0to5 = c(0,.8)
+full$futcovSMC0to10 = c(0,.8)
 
 #### 'scens' will contain all possible combinations of these scenario variations
 scens = expand.grid( full )

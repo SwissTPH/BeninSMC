@@ -47,26 +47,36 @@ popU10 <- pop_w %>% filter(age == "0-10") %>% pull(nHost)
 sort(unique(popU10/simulated_pop))
 (mean(popU10) - mean(popU5))/simulated_pop
 
-## define plans
+## define plans --- ADD PMC!!!
+
+departments_Demoextension <- c("Alibori","Atacora")
+departments_Geoextension <- c("Borgou", "Donga", "Collines")
 
 futrs = pop_w %>%
   #baseline: PBO nets in 2026, SMC under 5 in Alibori and Atacora
   mutate(baseline = (futITNtype2026 == "futPBOP2"&
-                  !(Admin1%in% c("Alibori","Atacora")&futcovSMC0to5 == 0)&
-                  (Admin1%in% c("Alibori","Atacora")|(futcovSMC0to5 == 0)))) %>%
+                  !(Admin1 %in% departments_Demoextension & futcovSMC0to5 == 0)&
+                  (Admin1 %in% departments_Demoextension | futcovSMC0to5 == 0))) %>%
   #Demographic extension: same nets in 2026 as in 2023, SMC under 10 in Alibori and Atacora
   mutate(Demo = (futITNtype2026 == "futPBOP2"&
-                Admin1%in% c("Alibori","Atacora")&futcovSMC0to10>0)) %>%
-  #Geographic extension: same nets in 2026 as in 2023, SMC under 5 everywhere
+                (Admin1 %in% departments_Demoextension | futcovSMC0to10 == 0)&
+                  !(Admin1 %in% departments_Demoextension & futcovSMC0to10 == 0)&
+                  futcovSMC0to5 == 0)) %>%
+  #Geographic extension: same nets in 2026 as in 2023, SMC under 5 in 5 departments
   mutate(Geo = (futITNtype2026 == "futPBOP2"&
-                futcovSMC0to5>0)) %>%
+                  (Admin1 %in% c(departments_Demoextension, departments_Geoextension) |
+                     futcovSMC0to5 == 0)&
+                  !(Admin1 %in% c(departments_Demoextension, departments_Geoextension) &
+                      futcovSMC0to5 == 0))) %>%
   group_by(year,age) %>%
   pivot_longer(cols = baseline:Geo,names_to = "scenario") %>%
   filter(value)
 
-# futrs %>% filter(year==2023,seed==1,age=="0-5",scenario=="BaU",
-#                  EIR_type=="middle") %>% View
+#futrs %>% group_by(sub) %>% distinct(scenario) %>% View
 
+# futrs %>%
+#   filter(seed==1,EIR_type=="middle",year==2000,sub=="natitingou",age=="0-5") %>%
+#   View()
 
 ### AGGREGATE 
 
@@ -88,8 +98,8 @@ range = "A1:D81") %>%
 futrs <- futrs %>% left_join(names_ZS)
 
 futrs <- futrs %>%
-  mutate(Extension = case_when(Admin1 %in% c("Alibori","Atacora")~"Demo",
-                               Admin1 %in% c("Borgou", "Donga", "Collines")~"Geo",
+  mutate(Extension = case_when(Admin1 %in% departments_Demoextension~"Demo",
+                               Admin1 %in% departments_Geoextension~"Geo",
                                TRUE ~ NA))
 
 ##### Data frames split by indicator or age
@@ -99,7 +109,6 @@ PfPR_df <- futrs %>% filter(age=="0-100") %>%
 
 PfPR_dfU5 <- futrs %>% filter(age=="0-5") %>%
   select(setting,sub,Admin1,ZS,Extension,EIR_type,seed,year,age,PR,scenario,pop)
-
 
 nSevere_df <- futrs %>% filter(age=="0-100") %>%
   select(setting,sub,Admin1,ZS,Extension,EIR_type,seed,year,age,nSevere,scenario,pop)

@@ -14,8 +14,10 @@ source("./1define_scenarios.R")
 ### By extension (demographic versus geographic)
 
 targeted_pop_Ext <- futrs %>% filter(year %in% 2024:2026,seed==1,EIR_type=="middle") %>%
-  filter((Extension=="Demo"&scenario=="Demo"&age=="5-10")|
-           (Extension=="Geo" &scenario=="Geo"&age=="0-5"))%>%
+  filter((Extension=="Demo" & scenario=="Demo" & age=="5-10" &
+            Admin1 %in% departments_Demoextension)|
+           (Extension=="Geo" & scenario=="Geo" & age=="0-5" &
+              Admin1 %in% departments_Geoextension))%>%
   group_by(Extension,age,year,scenario) %>%
   summarise(pop=sum(pop)) %>%
   group_by(Extension,age,scenario) %>%
@@ -63,7 +65,7 @@ avertedbaseline_expectedDirectDeaths_Ext <- casesAverted.sumAcrossYears(expected
 
 targeted_pop_geo_Admin1 <- futrs %>% 
   filter(year %in% 2024:2026,seed==1,EIR_type=="middle",
-         Admin1 %in% c("Borgou","Collines","Donga"),scenario=="Geo",age=="0-5")%>%
+         Admin1 %in% departments_Geoextension,scenario=="Geo",age=="0-5")%>%
   group_by(Admin1,age,year,scenario) %>%
   summarise(pop=sum(pop)) %>%
   group_by(Admin1,age,scenario) %>%
@@ -200,3 +202,4 @@ right_join(avertedbaseline_nSevere_Admin1 %>% ungroup() %>% select(-age),
 right_join(avertedbaseline_expectedDirectDeaths_Admin1 %>% ungroup() %>% select(-age),
            targeted_pop_geo_Admin1) %>%
   mutate(across(starts_with("ca"),~./pop*10^6)) %>% filter(Admin1=="Donga")
+

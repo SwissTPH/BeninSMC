@@ -53,8 +53,8 @@ departments_Demoextension <- c("Alibori","Atacora")
 departments_Geoextension <- c("Borgou", "Donga", "Collines")
 
 futrs = pop_w %>%
-  #baseline: PBO nets in 2026, SMC under 5 in Alibori and Atacora
-  mutate(baseline = (futITNtype2026 == "futPBOP2"&
+  #: PBO nets in 2026, SMC under 5 in Alibori and Atacora
+  mutate(planned = (futITNtype2026 == "futPBOP2"&
                   !(Admin1 %in% departments_Demoextension & futcovSMC0to5 == 0)&
                   (Admin1 %in% departments_Demoextension | futcovSMC0to5 == 0))) %>%
   #Demographic extension: same nets in 2026 as in 2023, SMC under 10 in Alibori and Atacora
@@ -69,7 +69,7 @@ futrs = pop_w %>%
                   !(Admin1 %in% c(departments_Demoextension, departments_Geoextension) &
                       futcovSMC0to5 == 0))) %>%
   group_by(year,age) %>%
-  pivot_longer(cols = baseline:Geo,names_to = "scenario") %>%
+  pivot_longer(cols = planned:Geo,names_to = "scenario") %>%
   filter(value)
 
 #futrs %>% group_by(sub) %>% distinct(scenario) %>% View

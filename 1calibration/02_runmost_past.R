@@ -50,6 +50,8 @@ if (Sys.getenv("USER") == "lemant0000") {
 
 expName = "BeninSMC_1calibration"
 
+source("helper_functions/helper_functions_simulations.R")
+
 # Load experiment
 start_time = Sys.time()
 print(paste(Sys.time(), "-> Loading experiment ..."))

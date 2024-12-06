@@ -6,13 +6,8 @@
 rm(list=ls())
 
 # Load packages
-library(dplyr)
 library(tidyverse)
-library(openMalariaUtilities)
-library(OMAddons)
-library(stringr)
 library(RSQLite)
-
 
 #####################################
 # Initialization
@@ -21,7 +16,7 @@ library(RSQLite)
 
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
-  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMC/"
+  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
   } else {
   print("Please specify the paths to the necessary folders!")
 }
@@ -31,6 +26,9 @@ experiment_folder = paste0(root_dir_path, expName)
 
 # Set working directory to the one where this file is located
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+# Source helper functions
+source("../helper_functions/helper_functions_calibration.R")
 
 # Load fitdat
 
@@ -67,10 +65,6 @@ calibration_spec = list(
   cols_observed = "prevalenceRate_obs",
   cols_simulated = "prevalenceRate"
 )
-
-# setwd(paste0(dirname(rstudioapi::getActiveDocumentContext()$path)))
-# print(paste("Working directory set to ", getwd()))
-# source("calibration_visualisation.R")
 
 # Read the results table from the database:
 # open database connection:

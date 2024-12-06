@@ -11,19 +11,12 @@
 # History cleanup
 rm(list=ls())
 
-# Package installation for the first time:
-# first you need to clone the repositories and then:
-# devtools::install("~/Git_repo/r-openMalariaUtilities/")
-# devtools::install("~/Git_repo/omuaddons/")
-# devtools::install("~/Git_repo/omu-slurm/")
-# devtools::install("~/Git_repo/omu-compat/")
+# Install openMalariaUtilities
+# devtools::install_github("SwissTPH/r-openMalariaUtilities", ref = "23.02")
 
 # Load the necessary packages
-# library(devtools)
 library(openMalariaUtilities)
-library(OMAddons)
-library(omuslurm)
-library(omucompat)
+library(tidyverse)
 
 #####################################
 # Initialization
@@ -31,7 +24,7 @@ library(omucompat)
 
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
-  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMC/"
+  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
 } else {
   print("Please specify the paths to the necessary folders!")
 }
@@ -41,6 +34,9 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Load the base xml list setup function and auxiliary functions
 source("00_create_base_past.R")
+
+# Source helper functions
+source("../helper_functions/helper_functions_setup_simulations.R")
 
 #####################################
 # Experiment setup
@@ -54,14 +50,22 @@ setupDirs(experimentName = expName, rootDir = root_dir_path, replace = TRUE)
 
 # Initialize cache and create the base xml file
 baseList = create_baseList(country_name = "BEN",
-                                   expName = expName,
-                                   sim_start = "1918-01-01",
-                                   versionnum = 44L)
+                           expName = expName,
+                           sim_start = "1918-01-01",
+                           versionnum = 44L)
 createBaseXml(baseList, replace = TRUE)
 
 ## Copy necessary Open Malaria files. It needs to be called after
 ## createBaseXml, otherwise the cache is not set up.
 setupOM()
+# If it does not work, download the files  
+# autoRegressionParameters.csv and densities.csv
+# from https://github.com/SwissTPH/openmalaria/tree/schema-44.0/test
+# and copy them to your experiment folder (named expName, here BeninSMC1_calibration),
+# where the base XML has been saved.
+# Also download the file scenario_44.xsd
+# from https://github.com/SwissTPH/openmalaria/blob/schema-44.0/schema/scenario_44.xsd
+# and copy it to the experiment folder
 
 ## Countrydat 
 #' with information on
@@ -85,7 +89,7 @@ colnames(dat) <- gsub("surveys","",colnames(dat))
 
 ##-- need to convert Access to 5-day time steps
 ## Make sure there are no NAs in dat otherwise convert_access fails
-dat= convert_access(dat,pattern="EffCov14d",katya=F,scale=1)
+dat = convert_access(dat,pattern="EffCov14d",katya=F,scale=1)
 
 
 #####################################
@@ -134,10 +138,28 @@ if (validateXML(xmlfile = getCache(x = "baseXml"),
 
 #####################################
 # Prepare scripts for creating, running and postprocessing all the scenarios and simulations
+# with the slurm schedulung system.
+# We use a internal package (omuslurm) below to generate R scripts to create all XML files,
+# run simulations and postprocess them, as well as generate bash files (.sh) to run these R scripts with slurm.
+
+# These R scripts and bash files are also provided in the repository (1calibration/slurm_files), 
+# so if you don't have omuslurm, you can copy them into the experiment folder,
+# then navigate to the experiment folder in your terminal and run successively
+# sbatch slurm_scenarios.sh
+# sbatch slurm_simulation.sh
+# sbatch slurm_results.sh.
+# Make sure to wait until each has finished before running the next one, otherwise
+# you may have missing simulations!
+# You can then skip 02_runmost_past.R and go directly to 03_calibrate.R.
 #####################################
+
+library(omuslurm) 
 print ("Generating analysis scripts ...")
+
+## to run if lines above have not been run in this session
 # experiment_folder = paste0(root_dir_path, expName)
 # loadExperiment(experiment_folder)
+
 ## 1. Prepare the scripts for creating the scenarios
 # Make sure to adjust the nCPU, memCPU, time and qos if you run larger experiments
 slurmPrepareScenarios(expName = expName, scenarios = scens, nCPU = 50, bSize = 200,
@@ -166,7 +188,7 @@ results_columns = c("scenario_id",
 
 # Remove the results database if it already exists
 # Overwriting an existing database with the same scenario IDs will not work
-db_file = file.path(paste0(getCache("experimentDir"),"/", expName, ".sqlite"))
+db_file = file.path(paste0(root_dir_path, expName, ".sqlite"))
 if (file.exists(db_file)) {
   print(paste0("A database for ", expName, " exists already and will be removed."))
   file.remove(db_file)
@@ -183,3 +205,4 @@ slurmPrepareResults(expDir = getCache("experimentDir"), dbName = expName,
                     ntasks = 1, mem = "50G", nCPU = 30,
                     strategy = "batch", indexOn = NULL,
                     rModule = "R/4.2.1-foss-2022a")
+

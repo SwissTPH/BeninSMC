@@ -3,6 +3,19 @@
 # 2. Run OpenMalaria simulations
 # 3. Postprocessing of results in one database
 #
+# Only if you have the omuslurm package, otherwise copy the files from 
+# 1calibration/slurm_files  into the experiment folder,
+# then navigate to the experiment folder in your terminal and run successively
+# sbatch slurm_scenarios.sh
+# sbatch slurm_simulation.sh
+# sbatch slurm_results.sh.
+# Make sure to wait until each has finished before running the next one, otherwise
+# you may have missing simulations!
+# You can then skip 02_runmost_past.R and go directly to 03_calibrate.R.
+#
+# FROM HERE ONLY IF YOU HAVE omuslurm PACKAGE
+# This script will leave your R session hanging until everything has run
+# (several hours), so you can run it in another session:
 # To run this script inside a screen session in the Linux terminal,
 # type screen then navigate to the script's folder
 # load the R module inside the screen session:
@@ -25,16 +38,12 @@
 rm(list=ls())
 
 # Load the necessary packages
-library(devtools)
 library(openMalariaUtilities)
-library(OMAddons)
 library(omuslurm)
-library(omucompat)
-library(RSQLite)
 
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
-  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMC/"
+  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
 } else {
   print("Please specify the paths to the necessary folders!")
 }

@@ -4,6 +4,13 @@
 # modified 15.11.2024 by Jeanne Lemant
 #################################
 
+# Install AnophelesModel
+
+# devtools::install_github("SwissTPH/AnophelesModel",
+#                          build_vignettes = FALSE,
+#                          ref = "v1.0.0",
+#                          force = TRUE)
+
 library(tidyverse)
 library(AnophelesModel)
 

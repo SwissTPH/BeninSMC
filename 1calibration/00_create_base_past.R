@@ -4,8 +4,6 @@
 # Load the necessary packages
 library(openMalariaUtilities)
 library(tidyverse)
-library(omucompat)
-#library(stringr)
 
 # Function that creates a list with all the elements which are specific for the
 # base xml (placeholders, interventions, etc.)

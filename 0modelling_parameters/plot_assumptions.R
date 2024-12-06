@@ -5,10 +5,9 @@
 #################################
 
 library(tidyverse)
-#library(wesanderson)
 library(scales)
 library(ggnewscale)
-#library(readxl)
+library(readxl)
 library(sf)
 
 rm( list =  ls() )
@@ -53,6 +52,10 @@ good_names <- rbind(correspondence_communes_settings,
   select(-Admin2) %>%
   rename(Admin2 = "sub")
 
+PopAgeGender <- readxl::read_xlsx("../data/pop_structure_RGPH4.xlsx")%>%
+  setNames(c("Age","Total","M","F"))%>%
+  mutate(Age = str_remove_all(Age, " ans"))
+
 # case management
 CM = read.csv("../data/DHS_MICS_eff_cov_CM.csv") %>%
   select(admin1,year,access,eff_cov) %>%
@@ -84,7 +87,7 @@ Admin2_shp <- file.path("../data/BEN_communes/communes.shp") %>%
                           Admn1_N=="Ouémé"~"Oueme",
                           TRUE~Admn1_N))
 
-#### Population ####
+#### Population increase ####
 
 pop_projected_long <- pop_projected %>%
   pivot_longer(cols=pop2013:pop2000,names_to = "year",values_to = "pop_All",
@@ -107,6 +110,21 @@ ggplot()+
 
 ggsave(filename=paste0(supportinginfodir,"pop_commune.png")
        ,width = 25,height=15)
+
+#### Population structure ####
+
+PopAgeGender$prop=PopAgeGender$Total/PopAgeGender$Total[dim(PopAgeGender)[1]]
+
+ggplot(PopAgeGender %>% filter(Age!="BENIN"),
+       aes(x=Age,y=prop))+
+  geom_col()+
+  scale_y_continuous(labels=scales::percent)+
+  labs(x="Age group",y="")+
+  theme_minimal(base_size=30)
+
+ggsave(filename=paste0(supportinginfodir,"pop_structure.png")
+       ,width = 25,height=10)
+
 
 #### Seasonality ####
 
@@ -232,7 +250,7 @@ ggplot()+
   geom_sf(data = Admin1_shp, fill = NA, linewidth = 1.05, color = "gray40") +
   facet_wrap(~year)+
   theme_void(base_size = 60)+
-  scale_fill_manual(values=c("palegreen","mediumseagreen","aquamarine3"),
+  scale_fill_manual(values=c("palegreen","#40916c","#74c69d"),
                     na.value="white",name="",na.translate=FALSE)+
   theme(legend.position = "bottom")
 
@@ -329,101 +347,47 @@ ggplot(updatedCM_long,aes(x=year,y=value,color=name))+
 ggsave(filename=paste0(supportinginfodir,"access_EffCov.png")
        ,width = 18,height=15)
 
+#### SMC ####
 
-##################################################################
+## historical SMC
 
-calibrated_output_ITNsurveys_resist<-readRDS("./calibrated_output_ITNsurveys_resist.RDS")
+SMChistory <- ZS_shp_simpl %>%
+  mutate(`2019`=ifelse(!Admin1 %in% c("Alibori","Atacora"),"no",
+                       ifelse(ZS%in%c("TMC","MK"),'SMC',"soon"))) %>%
+  mutate(`2020`=ifelse(!Admin1 %in% c("Alibori","Atacora"),"no",
+                       ifelse(`2019`=="SMC"|ZS%in%c("BNK","KGS"),'SMC',"soon"))) %>%
+  mutate(`2021-2023`=ifelse(!Admin1 %in% c("Alibori","Atacora"),"no",
+                            ifelse(`2020`=="SMC"|ZS%in%c("NBT","2KP"),'SMC',"soon"))) %>%
+  mutate(supervised=ifelse(ZS%in%c("TMC","MK"),1,3))
 
-calibrated_output_ITNsurveys_resist %>% filter(Admin1 %in% c("Borgou","Donga","Collines","Alibori","Atacora"))
+SMChistory_long <- SMChistory %>%
+  pivot_longer(cols=`2019`:`2021-2023`,names_to="year",values_to="SMC") %>%
+  mutate(actualSMC=ifelse(SMC=="SMC",supervised,NA))
 
-countrydat <- read.csv("./BEN_countrydat_oct2022_ITN_MAP_surveys.csv")
+SMChistory_map <- left_join( ZS_shp,
+                             SMChistory_long,
+                             by = c("ZS","Admin1","ZS_1stcommune","nameZS"))
 
-CM = read.csv("./data/DHS_MICS_eff_cov_CM.csv") %>%
-  select(admin1,year,access,eff_cov) %>%
-  mutate(Admin1=firstup(admin1)) %>%
-  select(-admin1)
-
-PopAgeGender <- readxl::read_xlsx("./data/pop_structure_RGPH4.xlsx")%>%
-  setNames(c("Age","Total","M","F"))%>%
-  mutate(Age = str_remove_all(Age, " ans"))
-
-ggplot(calibrated_output_ITNsurveys_resist %>%
-         filter(Admin1 %in% c("Borgou","Donga","Collines"),
-                !Admin2 %in% c("Sinende","Bembereke")),
-       aes(y=Admin2,x=EIRmle_tilde_round,xmin=EIR_lci,xmax=EIR_uci,color=Admin1))+
-  geom_pointrange(size=2,lwd=2)+
-  scale_color_manual(values=wes_palette("IsleofDogs1"))+
-  facet_wrap(Admin1~.,ncol=1,scales="free_y")+
-  theme_minimal(base_size=35)
-
-### Population
-
-##### population structure
-
-PopAgeGender <- readxl::read_xlsx("./data/pop_structure_RGPH4.xlsx")%>%
-  setNames(c("Age","Total","M","F"))%>%
-  mutate(Age = str_remove_all(Age, " ans"))
-
-PopAgeGender$prop=PopAgeGender$Total/PopAgeGender$Total[dim(PopAgeGender)[1]]
-
-ggplot(PopAgeGender %>% filter(Age!="BENIN"),
-       aes(x=Age,y=prop))+
-  geom_col()+
-  scale_y_continuous(labels=scales::percent)+
-  labs(x="Age group",y="")+
-  theme_minimal(base_size=30)
+ggplot()+
+  geom_sf(data=SMChistory_map,aes(geometry=geometry,fill=SMC),
+          color="gray40",linewidth=.5)+
+  geom_sf(data = Admin1_shp, fill = NA, linewidth = 1.05, color = "gray40") +
+  facet_wrap(~year)+
+  theme_void(base_size = 40)+
+  scale_fill_manual(values=c("white","#009ffd","#b9dcf2"),guide="none")
 
 ggsave(filename=paste0(maindir,
-                       "/paper/figures_assumptions/pop_structure.png")
-       ,width = 25,height=10)
+                       "maps/historicalSMC",
+                       ".png"),width = 20,height=10)
 
-pop_projected <- read.csv("./data/commune_pop_from2013census_3.51growth_rate.csv") %>%
-  rename(sub="name")
-
-pop_projected <- pop_projected %>%
-  mutate(sub=case_when(sub=="cobly"~"kobli",
-                       sub=="copargo"~"kopargo",
-                       sub=="dassa-zoume"~"dassa",
-                       sub=="pehunco"~"pehonko",
-                       sub=="toucountouna"~"toukountouna",
-                       sub=="klouekame"~"klouekanme",
-                       sub=="adjarra"~"adjara",
-                       sub=="akpro_missrete"~"akpro-misserete",
-                       sub=="seme-kpodji"~"seme",
-                       sub=="zagnanado"~"zangnanado",
-                       sub=="zogbodomey"~"zogbodome",
-                       TRUE~sub))
-
-pop_projected_long <- pop_projected %>%
-  pivot_longer(cols=pop2013:pop2030,names_to = "year",values_to = "pop_All",
-               names_prefix = "pop") %>%
-  mutate(year=as.numeric(year)) %>%
-  left_join(calibrated_output_ITNsurveys_resist %>% select(sub,Admin1))
-
-pop_projected_long %>% filter(is.na(Admin1)) %>% distinct(sub)
-
-ggplot(pop_projected_long %>%
-         group_by(year) %>%
-         summarise(pop_All=sum(pop_All)),aes(x=year,y=pop_All))+
-  geom_line()+
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))
-
-ggplot(pop_projected_long %>%
-         group_by(year,Admin1) %>%
-         summarise(pop_All=sum(pop_All)) %>%
-         filter(Admin1 %in% c("Alibori","Atacora","Borgou","Donga","Collines")) %>%
-         mutate(Admin1=factor(Admin1,levels=c("Atacora","Alibori","","Borgou","Donga","Collines"))) %>%
-         mutate(Admin1_wrap=factor(Admin1,levels=c("Borgou","Donga","Collines","Alibori","Atacora",""))),
-       aes(x=year,y=pop_All))+
-  geom_line(lwd=2)+
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
-  scale_x_continuous(breaks=seq(2015,2030,5))+
-  labs(y="Projected population",x="Year")+
-  facet_wrap(~ Admin1_wrap,as.table=FALSE)+
-  theme_minimal(base_size=30)
+ggplot()+
+  geom_sf(data=SMChistory_map,aes(geometry=geometry,fill=SMC),
+          color="gray40",linewidth=.5)+
+  geom_sf(data = Admin1_shp, fill = NA, linewidth = 1.05, color = "gray40") +
+  facet_wrap(~year)+
+  theme_void(base_size = 40)+
+  scale_fill_manual(values=c("white","#009ffd","white"),guide="none")
 
 ggsave(filename=paste0(maindir,
-                       "/paper/figures_assumptions/pop_growth.png")
-       ,width = 18,height=15)
-
-
+                       "maps/historicalSMC_whitebackground",
+                       ".png"),width = 20,height=10)

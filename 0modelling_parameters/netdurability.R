@@ -149,7 +149,7 @@ ITN_decay=data.frame(setting=rep(c("all nets","Permanet 2.0","Duranet"),each=5),
                      month=rep(c(10,4,10,4,10),3),
                      # representative sample of 900 nets (page 2)
                      # LLINs Survivorship page 7
-                     # for PermaNet 2.0 and Duranet, values read on Figure 10
+                     # for PermaNet 2.0 (polyester) and Duranet (polyethylene), values read on Figure 10
                      ITNcov=c(c(900,651,511,556,283)/900,
                               1,.96,.84,.68,.52,
                               1,.86,.72,.51,.33)

@@ -1,5 +1,5 @@
 #################################
-# Figure 4 (demographic versus geographic extension)
+# Figure 5 (demographic versus geographic extension)
 #
 # modified 28.11.2024 by Jeanne Lemant
 #################################
@@ -73,7 +73,7 @@ figure4a <- ggplot(avertedplanned_OMcases_Ext %>%
                      aes(x=Dpts,y=ca.tot.mean,ymin=ca.tot.inf,ymax=ca.tot.sup,fill=Dpts))+
   geom_col(alpha=c_alpha)+
   geom_errorbar(width=.5)+
-  labs(title="All averted cases\nper thousand")+
+  labs(title="All averted episodes\nper thousand")+
   scale_y_continuous(limits=c(-50,850))+
   scale_fill_manual(values=c(color_demo,color_geo),name="Extension")+
   theme_minimal(base_size = b_size)+
@@ -118,7 +118,7 @@ plot_grid(plot_grid(figure4a + theme(legend.position="none"),
           get_legend(
             figure4a),ncol = 1, rel_heights = c(1, .1))
 
-ggsave(file = paste0(figdir, "Figure4.png"),
+ggsave(file = paste0(figdir, "Figure5.png"),
        height = 12, width = 25)
-ggsave(file = paste0(figdir, "Figure4.svg"),
+ggsave(file = paste0(figdir, "Figure5.svg"),
        height = 12, width = 25)

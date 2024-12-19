@@ -9,8 +9,6 @@ library(readxl)
 
 rm(list=ls())
 
-maindir <- "C:/Users/lemaje/switchdrive/Institution/AIM/7. Internal manuscripts/BEN_SMC/"
-
 ## raw calibrated futures
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 simuls = readRDS("../2future_simulations/calibrated_simulations.Rda") %>%
@@ -80,7 +78,7 @@ futrs = pop_w %>%
 
 ### AGGREGATE 
 
-source("helper_functions_results.R")
+source("../helper_functions/helper_functions_results.R")
 
 names_ZS <- readxl::read_xlsx("../data/sanitary_zones.xlsx",
 range = "A1:D81") %>%

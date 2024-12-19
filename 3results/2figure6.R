@@ -1,5 +1,5 @@
 #################################
-# Figure 4 (demographic versus geographic extension)
+# Figure 6 (prioritisation with geographic extension)
 #
 # modified 28.11.2024 by Jeanne Lemant
 #################################
@@ -55,12 +55,12 @@ avertedplanned_nSevere_ZS <- casesAverted.sumAcrossYears(nSevere_df %>%
   left_join(names_ZS %>% select(-sub) %>% distinct())
 
 
-color_demo <- "#ffa400"
+color_geo <- "#009ffd"
 c_alpha <- .5
 b_size <- 50
 
 ggplot(avertedplanned_OMcases_ZS %>%
-         mutate(indicator_full="All cases averted\nper 1000 children under 5") %>%
+         mutate(indicator_full="All episodes averted\nper 1000 children under 5") %>%
          rbind(avertedplanned_nSevere_ZS %>%
                  mutate(indicator_full="Severe cases averted\nper 1000 children under 5")) %>%
          ungroup() %>% select(-age) %>%
@@ -75,7 +75,7 @@ ggplot(avertedplanned_OMcases_ZS %>%
   theme(strip.placement = "outside",
         axis.title.y = element_blank())
 
-ggsave(file = paste0(figdir, "Figure5.png"),
+ggsave(file = paste0(figdir, "Figure6.png"),
        height = 20, width = 18)
-ggsave(file = paste0(figdir, "Figure5.svg"),
+ggsave(file = paste0(figdir, "Figure6.svg"),
        height = 20, width = 18)

@@ -1,5 +1,5 @@
 #################################
-# Figure 3 (cases by age group)
+# Figure 4 (cases by age group)
 #
 # modified 28.11.2024 by Jeanne Lemant
 #################################
@@ -123,7 +123,7 @@ figure3a <- ggplot(OMcases_fig3,
   facet_grid(.~ExtLabel,scales="free",switch="y")+
   scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
   scale_fill_manual(values=c("#4f6d7a","#e8dab2","#dd6e42"))+
-  labs(title="All cases")+
+  labs(title="All episodes")+
   theme_minimal(base_size = b_size)+
   theme(strip.placement = "outside",
         axis.title.y = element_blank(),
@@ -148,8 +148,8 @@ plot_grid(plot_grid(figure3a + theme(legend.position="none"),
           get_legend(
             figure3a),nrow = 1, rel_widths = c(1, .1))
 
-ggsave(file = paste0(figdir, "Figure3.png"),
+ggsave(file = paste0(figdir, "Figure4.png"),
        height = 12, width = 30)
-ggsave(file = paste0(figdir, "Figure3.svg"),
+ggsave(file = paste0(figdir, "Figure4.svg"),
        height = 12, width = 30)
 

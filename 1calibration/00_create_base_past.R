@@ -1,5 +1,5 @@
-# To install OpenMalariaUtilities:
-#install.packages("~/Git_repo/r-openMalariaUtilities", repos = NULL, type="source")
+# Install openMalariaUtilities
+# devtools::install_github("SwissTPH/r-openMalariaUtilities", ref = "23.02")
 
 # Load the necessary packages
 library(openMalariaUtilities)

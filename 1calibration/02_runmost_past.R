@@ -75,5 +75,5 @@ print(paste(Sys.time(), "-> Running postprocessing ..."))
 slurmRunResults()
 end_time = Sys.time()
 
-print(paste(Sys.time(), "-> Finished running for", trial))
+print(paste(Sys.time(), "-> Finished running"))
 as.difftime(end_time - start_time, format = "%X", units = "auto", tz = "CET")

@@ -65,7 +65,7 @@ color_geo <- "#009ffd"
 c_alpha <- .5
 b_size <- 50
 
-figure4a <- ggplot(avertedplanned_OMcases_Ext %>%
+figure5a <- ggplot(avertedplanned_OMcases_Ext %>%
                        right_join(targeted_pop_Ext) %>%
                        mutate(across(starts_with("ca"),~./target_pop*10^3)) %>%
                        mutate(Dpts=ifelse(Extension=="Demo","Demographic (Alibori+Atacora)",
@@ -81,7 +81,7 @@ figure4a <- ggplot(avertedplanned_OMcases_Ext %>%
         axis.text.x = element_blank(),legend.position = "bottom",
         plot.title = element_text(size=40,hjust = 0.5))
 
-figure4b <- ggplot(avertedplanned_nSevere_Ext %>%
+figure5b <- ggplot(avertedplanned_nSevere_Ext %>%
                        right_join(targeted_pop_Ext) %>%
                        mutate(across(starts_with("ca"),~./target_pop*10^3)) %>%
                        mutate(Dpts=ifelse(Extension=="Demo","Demographic (Alibori+Atacora)",
@@ -96,7 +96,7 @@ figure4b <- ggplot(avertedplanned_nSevere_Ext %>%
         axis.text.x = element_blank(),legend.position = "bottom",
         plot.title = element_text(size=40,hjust = 0.5))
 
-figure4c <- ggplot(avertedplanned_expectedDirectDeaths_Ext %>%
+figure5c <- ggplot(avertedplanned_expectedDirectDeaths_Ext %>%
                                     right_join(targeted_pop_Ext) %>%
                                     mutate(across(starts_with("ca"),~./target_pop*10^6)) %>%
                                     mutate(Dpts=ifelse(Extension=="Demo","Demographic (Alibori+Atacora)",
@@ -111,12 +111,12 @@ figure4c <- ggplot(avertedplanned_expectedDirectDeaths_Ext %>%
         axis.text.x = element_blank(),legend.position = "bottom",
         plot.title = element_text(size=40,hjust = 0.5))
 
-plot_grid(plot_grid(figure4a + theme(legend.position="none"),
-                    figure4b + theme(legend.position="none"),
-                    figure4c + theme(legend.position="none"),
+plot_grid(plot_grid(figure5a + theme(legend.position="none"),
+                    figure5b + theme(legend.position="none"),
+                    figure5c + theme(legend.position="none"),
                     labels = c('A', 'B','C'),nrow=1,label_size = 40),
           get_legend(
-            figure4a),ncol = 1, rel_heights = c(1, .1))
+            figure5a),ncol = 1, rel_heights = c(1, .1))
 
 ggsave(file = paste0(figdir, "Figure5.png"),
        height = 12, width = 25)

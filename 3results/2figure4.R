@@ -116,7 +116,7 @@ nSevere_fig3 = bind_rows(nSevere_ExtU5,nSevere_Ext5to10,nSevere_Ext10to100) %>%
 c_alpha <- .5
 b_size <- 40
 
-figure3a <- ggplot(OMcases_fig3,
+figure4a <- ggplot(OMcases_fig3,
                      aes(x=scenLabel,y=totCases.mean,fill=age))+
   geom_col(alpha=c_alpha)+
   labs(x="",y="",fill="Age group")+
@@ -129,7 +129,7 @@ figure3a <- ggplot(OMcases_fig3,
         axis.title.y = element_blank(),
         plot.title = element_text(size=40,hjust=.5))
 
-figure3b <- ggplot(nSevere_fig3,
+figure4b <- ggplot(nSevere_fig3,
                      aes(x=scenLabel,y=totCases.mean,fill=age))+
   geom_col(alpha=c_alpha)+
   labs(x="",y="",fill="Age group")+
@@ -142,8 +142,8 @@ figure3b <- ggplot(nSevere_fig3,
         axis.title.y = element_blank(),
         plot.title = element_text(size=40,hjust=.5))
 
-plot_grid(plot_grid(figure3a + theme(legend.position="none"),
-                    figure3b + theme(legend.position="none"),
+plot_grid(plot_grid(figure4a + theme(legend.position="none"),
+                    figure4b + theme(legend.position="none"),
                     labels = c('A', 'B'),nrow=1,label_size = 40),
           get_legend(
             figure3a),nrow = 1, rel_widths = c(1, .1))

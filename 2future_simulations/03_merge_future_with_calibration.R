@@ -99,7 +99,7 @@ ggplot(simul_calib %>% filter(age=="0-5",sub=="parakou",
   xlim(2020,2030)+
   facet_wrap(futITNtype2026~.)
 
-### Filter for communes which received or should receive (or not) IRS and SMC
+### Filter for communes which received or should receive (or not) IRS, SMC or PMC
 sub_IRS2020 = c("kopargo","djougou","gogounou","kandi","segbana","kouande")
 
 sub_IRS2021 = c("ouake","segbana")
@@ -109,6 +109,11 @@ sub_SMC2021 = c("kobli","materi","tanguieta",
                 "kerou","kouande","pehonko",
                 "banikoara","gogounou","kandi",
                 "karimama","malanville","segbana")
+
+sub_PMCSep2022 = c("bohicon","zogbodome","za-kpota")
+
+sub_PMCMar2023 = c("lalo","toviklin","klouekanme",
+                   "bembereke","sinende")
 
 #these communes received OlysetPlus nets in 2023, made of polyester
 sub_OlysetPlus <- c("malanville","kandi","banikoara","gogounou")
@@ -122,7 +127,9 @@ simul_calib <- simul_calib %>%
            (!(sub %in% sub_IRS2021) & recentIRScov2021==0)) %>%
   right_join(histITNtypes) %>%
   filter(!(futITNtype2023=="futPBODN"&!sub%in%sub_OlysetPlus)) %>%
-  filter(!(futITNtype2023!="futPBODN"&sub%in%sub_OlysetPlus))
+  filter(!(futITNtype2023!="futPBODN"&sub%in%sub_OlysetPlus)) %>%
+  filter(!(futPMCSep2022cov>0&!sub%in%sub_PMCSep2022)) %>%
+  filter(!(futPMCMar2023cov>0&!sub%in%sub_PMCMar2023))
 
 simul_calib %>% filter(year==2024,seed==1,EIR_type=="lower",age=="0-5",
                        futcovSMC0to5>0,futITNtype2026=="futPBOP2") %>% View
@@ -130,6 +137,13 @@ simul_calib %>% filter(year==2024,seed==1,EIR_type=="lower",age=="0-5",
 ggplot(simul_calib %>% filter(age=="0-5",sub=="parakou",
                               seed==1,EIR_type=="middle"),
        aes(x=year,y=PR,color=futcovSMC0to5,group=futcovSMC0to5))+
+  geom_line()+
+  xlim(2000,2027)+
+  facet_wrap(futITNtype2026~.)
+
+ggplot(simul_calib %>% filter(age=="0-5",sub=="bohicon",
+                              seed==1,EIR_type=="middle"),
+       aes(x=year,y=PR,color=futPMCSep2022cov,group=futPMCSep2022cov))+
   geom_line()+
   xlim(2000,2027)+
   facet_wrap(futITNtype2026~.)

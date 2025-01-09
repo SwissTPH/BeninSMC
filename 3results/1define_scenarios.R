@@ -9,8 +9,12 @@ library(readxl)
 
 rm(list=ls())
 
-## raw calibrated futures
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+## Names of departments (admin1) and communes (admin2, also called sub)
+names_admin <- read.csv("../data/BEN_admin1_admin2_names.csv")
+
+## raw calibrated futures
 simuls = readRDS("../2future_simulations/calibrated_simulations.Rda") %>%
   filter(year<2028)
 
@@ -45,36 +49,53 @@ popU10 <- pop_w %>% filter(age == "0-10") %>% pull(nHost)
 sort(unique(popU10/simulated_pop))
 (mean(popU10) - mean(popU5))/simulated_pop
 
-## define plans --- ADD PMC!!!
+## define plans
 
-departments_Demoextension <- c("Alibori","Atacora")
-departments_Geoextension <- c("Borgou", "Donga", "Collines")
+sub_PMCSep2022 = c("bohicon","zogbodome","za-kpota")
+
+sub_PMCMar2023 = c("lalo","toviklin","klouekanme",
+                   "bembereke","sinende")
+
+sub_Demoextension <- names_admin %>%
+  filter(Admin1 %in% c("Alibori","Atacora")) %>%
+  distinct(sub) %>% pull()
+
+sub_Geoextension <- setdiff(names_admin %>%
+  filter(Admin1 %in% c("Borgou", "Donga", "Collines")) %>%
+  distinct(sub) %>% pull(),
+  c(sub_PMCSep2022, sub_PMCMar2023))
 
 futrs = pop_w %>%
-  #: PBO nets in 2026, SMC under 5 in Alibori and Atacora
+  #PBO nets in 2026, SMC under 5 in Alibori and Atacora, PMC pilots projects
   mutate(planned = (futITNtype2026 == "futPBOP2"&
-                  !(Admin1 %in% departments_Demoextension & futcovSMC0to5 == 0)&
-                  (Admin1 %in% departments_Demoextension | futcovSMC0to5 == 0))) %>%
+                      !(sub %in% sub_Demoextension & futcovSMC0to5 == 0)&
+                      (sub %in% sub_Demoextension | futcovSMC0to5 == 0)&
+                      !(sub %in% sub_PMCSep2022 & futPMCSep2022cov==0)&
+                      !(sub %in% sub_PMCMar2023 & futPMCMar2023cov==0))) %>%
   #Demographic extension: same nets in 2026 as in 2023, SMC under 10 in Alibori and Atacora
   mutate(Demo = (futITNtype2026 == "futPBOP2"&
-                (Admin1 %in% departments_Demoextension | futcovSMC0to10 == 0)&
-                  !(Admin1 %in% departments_Demoextension & futcovSMC0to10 == 0)&
-                  futcovSMC0to5 == 0)) %>%
+                   (sub %in% sub_Demoextension | futcovSMC0to10 == 0)&
+                   !(sub %in% sub_Demoextension & futcovSMC0to10 == 0)&
+                   futcovSMC0to5 == 0&
+                   !(sub %in% sub_PMCSep2022 & futPMCSep2022cov==0)&
+                   !(sub %in% sub_PMCMar2023 & futPMCMar2023cov==0))) %>%
   #Geographic extension: same nets in 2026 as in 2023, SMC under 5 in 5 departments
   mutate(Geo = (futITNtype2026 == "futPBOP2"&
-                  (Admin1 %in% c(departments_Demoextension, departments_Geoextension) |
+                  (sub %in% c(sub_Demoextension, sub_Geoextension) |
                      futcovSMC0to5 == 0)&
-                  !(Admin1 %in% c(departments_Demoextension, departments_Geoextension) &
-                      futcovSMC0to5 == 0))) %>%
+                  !(sub %in% c(sub_Demoextension, sub_Geoextension) &
+                      futcovSMC0to5 == 0&
+                      !(sub %in% sub_PMCSep2022 & futPMCSep2022cov==0)&
+                      !(sub %in% sub_PMCMar2023 & futPMCMar2023cov==0)))) %>%
   group_by(year,age) %>%
   pivot_longer(cols = planned:Geo,names_to = "scenario") %>%
   filter(value)
 
-#futrs %>% group_by(sub) %>% distinct(scenario) %>% View
+futrs %>% group_by(scenario) %>% summarize(count_sub = n_distinct(sub))
 
-# futrs %>%
-#   filter(seed==1,EIR_type=="middle",year==2000,sub=="natitingou",age=="0-5") %>%
-#   View()
+futrs %>%
+  filter(seed==1,EIR_type=="middle",year==2000,age=="0-5") %>%
+  select(sub,Admin1,starts_with("fut"),scenario) %>% View()
 
 ### AGGREGATE 
 

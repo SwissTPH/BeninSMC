@@ -8,17 +8,12 @@
 rm(list=ls())
 
 # Load the necessary packages
-library(devtools)
-library(openMalariaUtilities)
-library(OMAddons)
-library(omuslurm)
-library(omucompat)
-library(RSQLite)
 library(tidyverse)
+library(RSQLite)
 
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
-  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMC/"
+  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
 } else {
   print("Please specify the paths to the necessary folders!")
 }
@@ -104,9 +99,7 @@ ggplot(simul_calib %>% filter(age=="0-5",sub=="parakou",
   xlim(2020,2030)+
   facet_wrap(futITNtype2026~.)
 
-## filter communes which get or not IRS, SMC or PMC
-### Filter for communes which received or should receive (or not)
-### IRS, SMC and PMC
+### Filter for communes which received or should receive (or not) IRS and SMC
 sub_IRS2020 = c("kopargo","djougou","gogounou","kandi","segbana","kouande")
 
 sub_IRS2021 = c("ouake","segbana")

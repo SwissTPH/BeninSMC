@@ -11,19 +11,11 @@
 # History cleanup
 rm(list=ls())
 
-# Package installation for the first time:
-# first you need to clone the repositories and then:
-# devtools::install("~/Git_repo/r-openMalariaUtilities/")
-# devtools::install("~/Git_repo/omuaddons/")
-# devtools::install("~/Git_repo/omu-slurm/")
-# devtools::install("~/Git_repo/omu-compat/")
+# Install openMalariaUtilities
+# devtools::install_github("SwissTPH/r-openMalariaUtilities", ref = "23.02")
 
 # Load the necessary packages
-# library(devtools)
 library(openMalariaUtilities)
-library(OMAddons)
-library(omuslurm)
-library(omucompat)
 library(tidyverse)
 
 #####################################
@@ -32,7 +24,7 @@ library(tidyverse)
 
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
-  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMC/"
+  root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
 } else {
   print("Please specify the paths to the necessary folders!")
 }
@@ -43,6 +35,9 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Load the base xml list setup function and auxiliary functions
 source("00_create_base_future.R")
 
+# Source helper functions
+source("../helper_functions/helper_functions_setup_simulations.R")
+
 #####################################
 # Experiment setup
 #####################################
@@ -51,7 +46,7 @@ expName = "BeninSMC_2futuresimulations"
 
 # Definition of the folder where all results will be stored
 # clearCache
-setupDirs(experimentName = expName, rootDir = root_dir_path, replace = FALSE)
+setupDirs(experimentName = expName, rootDir = root_dir_path, replace = TRUE)
 
 # Initialize cache and create the base xml file
 baseList = create_baseList(country_name = "BEN",
@@ -63,6 +58,14 @@ createBaseXml(baseList, replace = FALSE)
 ## Copy necessary Open Malaria files. It needs to be called after
 ## createBaseXml, otherwise the cache is not set up.
 setupOM()
+# If it does not work, download the files  
+# autoRegressionParameters.csv and densities.csv
+# from https://github.com/SwissTPH/openmalaria/tree/schema-44.0/test
+# and copy them to your experiment folder (named expName, here BeninSMC1_calibration),
+# where the base XML has been saved.
+# Also download the file scenario_44.xsd
+# from https://github.com/SwissTPH/openmalaria/blob/schema-44.0/schema/scenario_44.xsd
+# and copy it to the experiment folder
 
 ## Countrydat
 #' with information on
@@ -86,7 +89,7 @@ colnames(dat) <- gsub("surveys","",colnames(dat))
 
 ##-- need to convert Access to 5-day time steps
 ## Make sure there are no NAs in dat otherwise convert_access fails
-dat= convert_access(dat,pattern="EffCov14d",katya=F,scale=1)
+dat = convert_access(dat,pattern="EffCov14d",katya=F,scale=1)
 
 # adding the EIRs from the calibration
 EIRs = readRDS("../1calibration/EIRs_calibration.RDS")
@@ -154,12 +157,22 @@ full$recentIRScov2021 = c(0,.9)
 full$futcovSMC0to5 = c(0,.8)
 full$futcovSMC0to10 = c(0,.8)
 
+full$futPMCSep2022cov=c(0,.8)
+full$futPMCMar2023cov=c(0,.8)
+
 #### 'scens' will contain all possible combinations of these scenario variations
 scens = expand.grid( full )
 
 scens = scens %>%
   # remove simultaneous SMC
-  filter(!(futcovSMC0to5>0 & futcovSMC0to10 >0))
+  filter(!(futcovSMC0to5>0 & futcovSMC0to10 >0)) %>%
+  # remove simultaneous PMC
+  filter(!(futPMCMar2023cov>0 & futPMCSep2022cov>0)) %>%
+  # remove simultaneous SMC and PMC
+  filter(!(futcovSMC0to5>0 & futPMCSep2022cov >0)) %>%
+  filter(!(futcovSMC0to5>0 & futPMCMar2023cov >0)) %>%
+  filter(!(futcovSMC0to10>0 & futPMCSep2022cov >0)) %>%
+  filter(!(futcovSMC0to10>0 & futPMCMar2023cov >0))
 
 #### selecting scenarios
 settings_IRS2020=EIRs %>%
@@ -172,20 +185,30 @@ settings_IRS2021=EIRs %>%
   filter(sub %in% c("ouake","segbana")) %>%
   pull(setting)
 
+settings_SMC = EIRs %>%
+  filter(Admin1 %in% c("Alibori","Atacora","Borgou","Donga","Collines")) %>%
+  pull(setting)
+
 settings_SMC0to10 = EIRs %>%
   filter(Admin1 %in% c("Alibori","Atacora")) %>%
   pull(setting)
 
-#these communes received OlysetPlus nets in 2023, made of polyester
+settings_PMCSep2022 = EIRs %>%
+  filter(sub %in% c("bohicon","zogbodome","za-kpota")) %>%
+  pull(setting)
+
+settings_PMCMar2023 = EIRs %>%
+  filter(sub %in% c("lalo","toviklin","klouekanme",
+                    "bembereke","sinende")) %>%
+  pull(setting)
+
+#these communes received OlysetPlus nets in 2023, made of polyethylene
 sub_OlysetPlus <- c("malanville","kandi","banikoara","gogounou")
 
 settings_OlysetPlus = EIRs %>%
   filter(sub %in% sub_OlysetPlus) %>%
   pull(setting) %>%
-  unique
-
-#SMC only in these departments
-SMC_departments <- c("Alibori","Atacora","Borgou","Donga","Collines")
+  unique()
 
 scens = scens %>%
   # remove IRS where not deployed
@@ -193,8 +216,14 @@ scens = scens %>%
   filter(setting %in% settings_IRS2021 | recentIRScov2021==0) %>%
   # remove SMC in children from 0 to 10 in Borgou, Collines and Donga
   filter(setting %in% settings_SMC0to10 | futcovSMC0to10==0) %>%
+  # no SMC in the departments not considered for it
+  filter(setting %in% settings_SMC | futcovSMC0to10==0) %>%
+  filter(setting %in% settings_SMC | futcovSMC0to5==0) %>%
   # always SMC at least in children under 5 in Alibori and Atacora
   filter(!(setting %in% settings_SMC0to10 & futcovSMC0to10==0&futcovSMC0to5==0)) %>%
+  # remove pilot PMC where not considered
+  filter(setting %in% settings_PMCSep2022 | futPMCSep2022cov==0) %>%
+  filter(setting %in% settings_PMCMar2023 | futPMCMar2023cov==0) %>%
   left_join(dat_calib,by="setting")
 
 scens = scens %>%
@@ -217,20 +246,16 @@ scens = scens %>%
   filter(!futITNtype2023=="futITNWeakDN") %>%
   filter(!(futITNtype2023=="futPBODN"&!setting%in%settings_OlysetPlus)) %>%
   #no going back to standard nets in 2026 if PBO in 2023
-  filter(!(grepl("PBO",futITNtype2023)&futITNtype2026=="futITNWeakP2")) %>%
-  # no SMC in the departments not considered for it
-  filter(Admin1 %in% SMC_departments | futcovSMC0to10==0) %>%
-  filter(Admin1 %in% SMC_departments | futcovSMC0to5==0)
+  filter(!(grepl("PBO",futITNtype2023)&futITNtype2026=="futITNWeakP2"))
 
 scens %>% filter(setting=="alibori.smc",EIR==66,seed==1,
-                 futITNtype2023=="futPBODN",futITNtype2026=="futPBOP2",
-                 futITNuse=="current"
+                 futITNtype2023=="futPBODN",futITNtype2026=="futPBOP2"
 ) %>% View
 
 scens %>% filter(futcovSMC0to5==futcovSMC0to10,seed==1,
-                 setting=="borgou",EIR==70,futITNuse=="current") %>% View
+                 setting=="borgou",EIR==68) %>% View
 
-scens %>% filter(seed==1,setting=="littoral",futITNuse=="current",EIR==16) %>% View
+scens %>% filter(seed==1,setting=="littoral",EIR==16) %>% View
 
 
 ## Are all placeholders in base XML a column in scens?
@@ -255,10 +280,28 @@ if (validateXML(xmlfile = getCache(x = "baseXml"),
 
 #####################################
 # Prepare scripts for creating, running and postprocessing all the scenarios and simulations
+# with the slurm schedulung system.
+# We use a internal package (omuslurm) below to generate R scripts to create all XML files,
+# run simulations and postprocess them, as well as generate bash files (.sh) to run these R scripts with slurm.
+
+# These R scripts and bash files are also provided in the repository (2future_simulations/slurm_files), 
+# so if you don't have omuslurm, you can copy them into the experiment folder,
+# then navigate to the experiment folder in your terminal and run successively
+# sbatch slurm_scenarios.sh
+# sbatch slurm_simulation.sh
+# sbatch slurm_results.sh.
+# Make sure to wait until each has finished before running the next one, otherwise
+# you may have missing simulations!
+# You can then skip 02_runmost_past.R and go directly to 03_merge_future_with_calibration.R.
 #####################################
+
+library(omuslurm) 
 print ("Generating analysis scripts ...")
+
+## to run if lines above have not been run in this session
 # experiment_folder = paste0(root_dir_path, expName)
 # loadExperiment(experiment_folder)
+
 ## 1. Prepare the scripts for creating the scenarios
 # Make sure to adjust the nCPU, memCPU, time and qos if you run larger experiments
 slurmPrepareScenarios(expName = expName, scenarios = scens, nCPU = 50, bSize = 200,

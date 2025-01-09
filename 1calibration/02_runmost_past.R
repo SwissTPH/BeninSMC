@@ -41,6 +41,11 @@ rm(list=ls())
 library(openMalariaUtilities)
 library(omuslurm)
 
+# Set working directory to the one where this file is located
+# This works only when running the script from Rstudio (comment out if running on screen)
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# print(paste("Working directory set to ", dirname(rstudioapi::getActiveDocumentContext()$path)))
+
 # Define root directory with all the experiments according to the user
 if (Sys.getenv("USER") == "lemant0000") {
   root_dir_path = "/scicore/home/pothin/lemant0000/OpenMalaria/Experiments/BeninSMCpaper/"
@@ -50,8 +55,7 @@ if (Sys.getenv("USER") == "lemant0000") {
 
 expName = "BeninSMC_1calibration"
 
-source("helper_functions/helper_functions_simulations.R")
-
+source("../helper_functions/helper_functions_simulations.R")
 # Load experiment
 start_time = Sys.time()
 print(paste(Sys.time(), "-> Loading experiment ..."))

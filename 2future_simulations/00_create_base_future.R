@@ -1,11 +1,6 @@
-# To install OpenMalariaUtilities:
-#install.packages("~/Git_repo/r-openMalariaUtilities", repos = NULL, type="source")
-
 # Load the necessary packages
 library(openMalariaUtilities)
 library(tidyverse)
-library(omucompat)
-#library(stringr)
 
 # Function that creates a list with all the elements which are specific for the
 # base xml (placeholders, interventions, etc.)
@@ -126,6 +121,10 @@ create_baseList = function(country_name, expName,
   ## Define SMC
   baseList <- define_treatSimple(baseList, component = "SMC",
                                  durationBlood = "25d")
+  
+  ## Define PMC
+  baseList <- define_treatSimple(baseList, component = "PMC",
+                                 durationBlood = "10d")
   
   ## Deployment section
   
@@ -325,35 +324,23 @@ create_baseList = function(country_name, expName,
                        , interval = "1 month"
                        , coverage = "@futcovSMC0to10@")
   
-  ### 2027
-  baseList <- deployIT(baseList, component = "SMC"
-                       , minAge = 0.25
-                       , maxAge = 5
-                       , startDate = "2027-07-15", endDate = "2027-10-30"
-                       , interval = "1 month"
-                       , coverage = "@futcovSMC0to5@")
+  ## Future PMC: 10 and 14 weeks, 6, 9, 12, 15, 18 and 24 months
   
-  baseList <- deployIT(baseList, component = "SMC"
-                       , minAge = 0.25
-                       , maxAge = 10
-                       , startDate = "2027-07-15", endDate = "2027-10-30"
-                       , interval = "1 month"
-                       , coverage = "@futcovSMC0to10@")
+  ### Communes starting in September 2022
+  baseList <- deploy_cont_compat(baseList, component = "PMC"
+                                 , begin = "2022-09-01"
+                                 , end = "2026-12-31"
+                                 , targetAgeYrs = c(10/52, 14/52, 0.5, 0.75,
+                                                    1 ,1.25, 1.5, 2)
+                                 , coverage = rep("@futPMCSep2022cov@",8))
   
-  ### 2028
-  baseList <- deployIT(baseList, component = "SMC"
-                       , minAge = 0.25
-                       , maxAge = 5
-                       , startDate = "2028-07-15", endDate = "2028-10-30"
-                       , interval = "1 month"
-                       , coverage = "@futcovSMC0to5@")
-  
-  baseList <- deployIT(baseList, component = "SMC"
-                       , minAge = 0.25
-                       , maxAge = 10
-                       , startDate = "2028-07-15", endDate = "2028-10-30"
-                       , interval = "1 month"
-                       , coverage = "@futcovSMC0to10@")
+  ### Communes starting in March 2023
+  baseList <- deploy_cont_compat(baseList, component = "PMC"
+                                 , begin = "2023-03-01"
+                                 , end = "2026-12-31"
+                                 , targetAgeYrs = c(10/52, 14/52, 0.5, 0.75,
+                                                    1, 1.25, 1.5, 2)
+                                 , coverage = rep("@futPMCMar2023cov@",8))
   
   ## Importation: MANDATORY
   ## 10 infections per 1000 people per year

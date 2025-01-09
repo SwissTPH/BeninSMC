@@ -84,18 +84,19 @@ futrs = pop_w %>%
                   (sub %in% c(sub_Demoextension, sub_Geoextension) |
                      futcovSMC0to5 == 0)&
                   !(sub %in% c(sub_Demoextension, sub_Geoextension) &
-                      futcovSMC0to5 == 0&
+                      futcovSMC0to5 == 0)&
                       !(sub %in% sub_PMCSep2022 & futPMCSep2022cov==0)&
-                      !(sub %in% sub_PMCMar2023 & futPMCMar2023cov==0)))) %>%
+                      !(sub %in% sub_PMCMar2023 & futPMCMar2023cov==0))) %>%
   group_by(year,age) %>%
   pivot_longer(cols = planned:Geo,names_to = "scenario") %>%
   filter(value)
 
 futrs %>% group_by(scenario) %>% summarize(count_sub = n_distinct(sub))
 
-futrs %>%
-  filter(seed==1,EIR_type=="middle",year==2000,age=="0-5") %>%
-  select(sub,Admin1,starts_with("fut"),scenario) %>% View()
+# futrs %>%
+#   filter(seed==1,EIR_type=="middle",year==2000,age=="0-5") %>%
+#   filter(sub %in% c(sub_PMCMar2023,sub_PMCSep2022)) %>%
+#   select(sub,Admin1,starts_with("fut"),scenario) %>% View()
 
 ### AGGREGATE 
 
@@ -117,8 +118,8 @@ range = "A1:D81") %>%
 futrs <- futrs %>% left_join(names_ZS)
 
 futrs <- futrs %>%
-  mutate(Extension = case_when(Admin1 %in% departments_Demoextension~"Demo",
-                               Admin1 %in% departments_Geoextension~"Geo",
+  mutate(Extension = case_when(sub %in% sub_Demoextension~"Demo",
+                               sub %in% sub_Geoextension~"Geo",
                                TRUE ~ NA))
 
 ##### Data frames split by indicator or age

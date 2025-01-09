@@ -146,7 +146,7 @@ plot_grid(plot_grid(figure4a + theme(legend.position="none"),
                     figure4b + theme(legend.position="none"),
                     labels = c('A', 'B'),nrow=1,label_size = 40),
           get_legend(
-            figure3a),nrow = 1, rel_widths = c(1, .1))
+            figure4a),nrow = 1, rel_widths = c(1, .1))
 
 ggsave(file = paste0(figdir, "Figure4.png"),
        height = 12, width = 30)

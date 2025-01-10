@@ -138,6 +138,6 @@ plot_grid(plot_grid(figure3a + theme(legend.position="none"),
 )
 
 ggsave(file = paste0(figdir, "Figure3.png"),
-       height = 20, width = 20)
+       height = 15, width = 20)
 ggsave(file = paste0(figdir, "Figure3.svg"),
-       height = 12, width = 30)
+       height = 15, width = 30)

@@ -1,5 +1,5 @@
 #################################
-# Figure 3 (validation of calibration against cases)
+# Figure 3 (validation of calibration on prevalence)
 #
 # modified 28.11.2024 by Jeanne Lemant
 #################################
@@ -9,135 +9,115 @@ rm(list=ls())
 library(cowplot)
 library(wesanderson)
 library(scales)
-library(readxl)
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source("./1define_scenarios.R")
 
-WMR2024 = read_xlsx(path = "../data/wmr2024_annex_4f.xlsx",
-                    range = "B52:F75",col_names = c("year","WHO_pop",
-                                                    "totCases.inf","totCases.mean","totCases.sup"))
-
-BENdir <- "C:/Users/lemaje/switchdrive/Institution/AIM/1 Country Support/Benin/"
-DHIS2<-read.csv( paste0( 
-  BENdir, "3. Data/2. Processed data/3. Malaria outcomes/",
-  "National data/2011-2019_DHIS2_long.csv" ))
-
 figdir = "C:/Users/lemaje/switchdrive/Institution/AIM/7. Internal manuscripts/BEN_SMC/Review/figures/"
 
-OMcases_All = computeAggrTimeSeriesCasesInc(OMcases_df
-                                            , cases_col = "OMcases"
-                                            , level_aggr = "national"
-                                            , pop_col = "pop"
-                                            , eir_col = "EIR_type"
-                                            , EIR_names = c("lower","middle","upper")
-                                            , fut_cols = "scenario"
-                                            , convert_pop = FALSE)
+#### Load data for validation
 
-OMcases_0to5 = computeAggrTimeSeriesCasesInc(OMcases_dfU5
-                                            , cases_col = "OMcases"
-                                            , level_aggr = "national"
-                                            , pop_col = "pop"
-                                            , eir_col = "EIR_type"
-                                            , EIR_names = c("lower","middle","upper")
-                                            , fut_cols = "scenario"
-                                            , convert_pop = FALSE)
+prevalence_surveys <- read.csv("../data/prevalence_surveys.csv", sep = ";")
 
-nTreat_All = computeAggrTimeSeriesCasesInc(nTreat_df
-                                           , cases_col = "nTreat"
-                                           , level_aggr = "national"
-                                           , pop_col = "pop"
-                                           , eir_col = "EIR_type"
-                                           , EIR_names = c("lower","middle","upper")
-                                           , fut_cols = "scenario"
-                                           , convert_pop = FALSE)
+MAP_PfPRU5 <- read.csv("../data/PfPR0to5_CI_Benin_2000-2019_MAP_global.csv")
 
-nTreat_0to5 = computeAggrTimeSeriesCasesInc(nTreat_dfU5
-                                           , cases_col = "nTreat"
-                                           , level_aggr = "national"
-                                           , pop_col = "pop"
-                                           , eir_col = "EIR_type"
-                                           , EIR_names = c("lower","middle","upper")
-                                           , fut_cols = "scenario"
-                                           , convert_pop = FALSE)
+simul_surveymonths_calib <- readRDS("../1calibration/surveymonths_calibrated_simulations.Rda")
 
-combined_indicators = rbind(OMcases_All %>% mutate(indicator = "Modelled episodes"),
-                            OMcases_0to5 %>% mutate(indicator = "Modelled episodes"),
-                            nTreat_All %>% mutate(indicator = "Modelled treated cases"),
-                            nTreat_0to5 %>% mutate(indicator = "Modelled treated cases"))
-  
-WMR2024_plot <- WMR2024 %>%
-  mutate(age = "0-100", .after = "WHO_pop") %>%
-  mutate(across(.cols = totCases.inf:totCases.sup, .fns = ~./WHO_pop*1000,
-                .names = "inc{.col}")) %>%
-  rename_with(.fn = ~ gsub("totCases","",.), .cols = starts_with("inc")) %>%
-  mutate(indicator = "WMR 2024")
+PfPR_BEN = computeAggrTimeSeriesPR(PfPR_dfU5
+                                   , pr_col = "PR"
+                                   , level_aggr = "national"
+                                   , pop_col = "pop"
+                                   , eir_col = "EIR_type"
+                                   , EIR_names = c("lower","middle","upper")
+                                   , fut_cols = "scenario")[[2]] %>%
+  rename(PR_mean = ind_mean, PR_inf = ind_inf, PR_sup = ind_sup)
 
-pop_national <- pop_projected_long %>%
-  group_by(year) %>%
-  summarise(pop_All = sum(pop_All))
+simulated_pop_monthly = unique(simul_surveymonths_calib$pop)
 
-DHIS2_plot <- DHIS2 %>% 
-  group_by(year,type) %>% 
-  summarise(totCases.mean = sum(value)) %>%
-  filter(type == "confirmed_total",year<2020) %>%
-  mutate(type="Reported confirmed cases") %>%
-  left_join(pop_national) %>%
-  mutate(inc.mean = totCases.mean / pop_All * 1000,
-         indicator = "Reported cases",
-         age = "0-100")
+simul_average_surveymonths = simul_surveymonths_calib %>%
+  filter(age=="0-5") %>%
+  group_by(setting,sub,Admin1,survey_year,seed,EIR_type,age) %>%
+  summarise(PR=mean(PR),nHost=mean(nHost)) %>%
+  separate(survey_year, into = c("survey", "year"), sep ="_") %>%
+  mutate(year=as.integer(year))
 
-combined_indicators_allsources = rbind(combined_indicators, WMR2024_plot, DHIS2_plot)
+simul_average_surveymonths_popw <- simul_average_surveymonths %>%
+  left_join(pop_projected_long) %>%
+  mutate(pop = pop_All*nHost/simulated_pop_monthly) %>%
+  group_by(sub,setting,seed,year,age) %>%
+  mutate(pop = mean(pop)) %>%
+  select(-pop_All) %>%
+  ungroup
 
+PfPR_surveymonths_Admin1 <- computeAggrTimeSeriesPR(simul_average_surveymonths_popw %>%
+                                                      select(-setting) %>%
+                                                      rename(setting="Admin1") %>%
+                                                      mutate(scenario="planned")
+                                                    , pr_col = "PR"
+                                                    , level_aggr = "setting"
+                                                    , pop_col = "pop"
+                                                    , eir_col = "EIR_type"
+                                                    , EIR_names = c("lower","middle","upper")
+                                                    , fut_cols = "scenario")[[2]] %>%
+  rename(PR_mean = ind_mean, PR_inf = ind_inf, PR_sup = ind_sup) %>%
+  rename(Admin1="setting")
+
+model_surveys_Admin1 <- prevalence_surveys %>%
+  filter(Admin!="Benin") %>%
+  rename(year = "year_start", Admin1 = "Admin") %>%
+  left_join(PfPR_surveymonths_Admin1)
 
 ##### general settings
 c_alpha <- .5
-indicator_colours <- c("#264653","#2a9d8f","#e9c46a","#f4a261")
-names(indicator_colours) <- c("Modelled episodes", "Modelled treated cases","WMR 2024", "Reported cases")
 b_size <- 40
+color_map <- rgb(78,176,155,maxColorValue = 255)
 
-figure3a <- ggplot(combined_indicators_allsources %>% filter(age == "0-100"),
-                   aes(x = year, ymin = totCases.inf, y = totCases.mean,
-                       ymax = totCases.sup, fill = indicator, colour = indicator))+
-  geom_ribbon(alpha = c_alpha)+
-  geom_line(size = 2)+
-  xlim(2000, 2023)+
-  theme_minimal(base_size = b_size)+
-  scale_colour_manual(name = "", values = indicator_colours)+
-  scale_fill_manual(name = "", values = indicator_colours)+
-  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
-  labs(x = "Year", title = "Malaria cases in all ages")+
-  theme(axis.title.y = element_blank(),
-        plot.title = element_text(size=40,hjust=.5),
-        legend.key.width = unit(1,"cm"))
+figure3a <- ggplot(PfPR_BEN %>% filter(scenario=="planned"))+
+  geom_ribbon(aes(x=year,ymin=PR_inf,ymax=PR_sup),fill="grey",
+              alpha=c_alpha)+
+  geom_line(aes(x=year,y=PR_mean,color="Model"),size=2)+
+  geom_pointrange(data=MAP_PfPRU5 %>% filter(year>2005),
+                  aes(x=year,y=PR_pop_adj/100,ymin=LCI/100,ymax=UCI/100,
+                      color="MAP (used for calibration)"),
+                  size=1,stroke=2,lwd=2,shape=21,fill="white")+
+  xlim(2005,2020)+
+  theme_minimal(base_size=b_size)+
+  labs(title="Malaria prevalence in children under 5 in Benin",x="Year")+
+  scale_y_continuous(labels=scales::percent,breaks=seq(2,7,1)/10,
+                     limits=c(.1,.75))+
+  scale_color_manual(name="Source",values=c(color_map,"darkgrey"))+
+  theme(legend.position = "bottom",
+        axis.title.y = element_blank(),
+        plot.title = element_text(size=40,hjust=.5))
 
-figure3b <- ggplot(combined_indicators %>% filter(indicator == "Modelled episodes") %>%
-                     mutate(age = paste0(age, " ")),
-                   aes(x = year, ymin = inc.inf, y = inc.mean,
-                       ymax = inc.sup, 
-                       linetype = age))+
-  geom_ribbon(alpha = c_alpha, fill = indicator_colours[1])+
-  geom_line(size = 2, color = indicator_colours[1])+
-  xlim(2000, 2023)+
-  theme_minimal(base_size = b_size)+
-  scale_y_continuous(labels=function(x) format(x, big.mark = " "))+
-  scale_colour_manual(values = indicator_colours, guide = "none")+
-  scale_fill_manual(values = indicator_colours, guide = "none")+
-  labs(x = "Year", title = "Incidence of modelled malaria\nepisodes per 1000")+
-  theme(axis.title.y = element_blank(),
-        plot.title = element_text(size=40,hjust=.5),
-        legend.key.width = unit(1,"cm"))+
-  guides(linetype = guide_legend(title = "Age group"))
+figure3b <- ggplot(model_surveys_Admin1,
+       aes(x = PfPR_RDT, y = PR_mean, ymin = PR_inf, ymax = PR_sup,
+           color = as.factor(year)))+
+  geom_pointrange(size=1,stroke=2,lwd=2)+
+  geom_abline(lwd=2)+
+  labs(x = "Survey prevalence", y = "Modelled prevalence", color = "Survey year")+
+  scale_color_manual(values = wes_palette("IsleofDogs1"))+
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(labels=scales::percent)+
+  theme_minimal(base_size=b_size)+
+  theme(legend.position = "bottom")
 
-plot_grid(plot_grid(figure3a + theme(legend.position="none"),
-          figure3b + theme(legend.position="none"),
-          labels = c('A', 'B'), ncol = 1, label_size = 40),
-          plot_grid(get_legend(figure3a) ,
-                    get_legend(figure3b) , ncol = 1),
-          rel_widths = c(1, .4)
+model <- lm(PfPR_RDT ~ PR_mean,
+            data=model_surveys_Admin1
+            )
+summary(model)
+
+model_wo_2015 <- lm(PfPR_RDT ~ PR_mean,
+            data=model_surveys_Admin1 %>% filter(year != 2015)
 )
+summary(model)
+
+plot_grid(plot_grid(figure3a,
+                    figure3b,
+                    labels = c('A', 'B'),nrow=1,label_size = 40))
 
 ggsave(file = paste0(figdir, "Figure3.png"),
-       height = 15, width = 20)
+       height = 12, width = 30)
 ggsave(file = paste0(figdir, "Figure3.svg"),
-       height = 15, width = 30)
+       height = 12, width = 30)
+

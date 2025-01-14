@@ -19,7 +19,7 @@ rm( list =  ls() )
 figdir = "C:/Users/lemaje/switchdrive/Institution/AIM/7. Internal manuscripts/BEN_SMC/Review/figures/"
 supportinginfodir <- "C:/Users/lemaje/switchdrive/Institution/AIM/7. Internal manuscripts/BEN_SMC/Review/figures_supportinginfo/"
 
-# set working directory to where this filke is saved
+# set working directory to where this file is saved
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 

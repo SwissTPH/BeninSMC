@@ -110,7 +110,7 @@ summary(model)
 model_wo_2015 <- lm(PfPR_RDT ~ PR_mean,
             data=model_surveys_Admin1 %>% filter(year != 2015)
 )
-summary(model)
+summary(model_wo_2015)
 
 plot_grid(plot_grid(figure3a,
                     figure3b,

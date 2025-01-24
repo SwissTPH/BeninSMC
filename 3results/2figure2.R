@@ -53,16 +53,16 @@ scenarios <- futrs %>%
                                    PMC ~ "PMC pilot projects",
                                    TRUE ~ NA),
          scenario = case_when(scenario == "planned" ~ "Planned interventions",
-                               scenario == "Demo" ~ "Demographic extension",
-                               scenario == "Geo" ~ "Geographic extension")) %>%
+                               scenario == "Demo" ~ "Planned interventions +\nDemographic extension",
+                               scenario == "Geo" ~ "Planned interventions +\nGeographic extension")) %>%
   mutate(interventions = factor(interventions, levels = c("PMC pilot projects",
                                                           "SMC in children under 5",
                                                           "SMC in children under 10")),
          scenario = factor(scenario, levels = c("Planned interventions",
-                                                "Demographic extension",
-                                                "Geographic extension"))) %>%
+                                                "Planned interventions +\nDemographic extension",
+                                                "Planned interventions +\nGeographic extension"))) %>%
   mutate(Department_name = ifelse((scenario == "Planned interventions" & sub %in% sub_Demoextension)|
-                               (scenario == "Geographic extension" & sub %in% sub_Geoextension),
+                               (scenario == "Planned interventions +\nGeographic extension" & sub %in% sub_Geoextension),
                              Admin1,""))
 
 Admin2_shp_scenarios <- Admin2_shp %>%
@@ -88,3 +88,4 @@ ggsave(file =paste0(figdir,"Figure2.png")
        ,width = 25, height=15)
 ggsave(file = paste0(figdir, "Figure2.svg"),
        height = 12, width = 25)
+

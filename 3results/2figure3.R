@@ -80,6 +80,11 @@ PfPR_surveymonths_Admin1 <- computeAggrTimeSeriesPR(simul_average_surveymonths_p
   rename(PR_mean = ind_mean, PR_inf = ind_inf, PR_sup = ind_sup) %>%
   rename(Admin1="setting")
 
+model_surveys_Admin1 <- prevalence_surveys %>%
+  filter(Admin!="Benin") %>%
+  rename(year = "year_start", Admin1 = "Admin") %>%
+  left_join(PfPR_surveymonths_Admin1)
+
 prevalence2017_map <- Admin1_shp %>%
   left_join(model_surveys_Admin1 %>%
               filter(year == 2017) %>%
@@ -155,16 +160,11 @@ model_wo_2015 <- lm(PfPR_RDT ~ PR_mean,
 )
 summary(model_wo_2015)
 
-model_surveys_Admin1 <- prevalence_surveys %>%
-  filter(Admin!="Benin") %>%
-  rename(year = "year_start", Admin1 = "Admin") %>%
-  left_join(PfPR_surveymonths_Admin1)
-
 figure3c <- ggplot(data=prevalence2017_map,
                    aes(geometry=geometry,fill=PfPR, label = PfPR_label,
                        x = lon, y = lat))+
   geom_sf(color="gray40",linewidth=.5)+
-  geom_label(size=6, fill = "white")+
+  geom_label(size=6)+
   scale_fill_distiller(palette = "Purples", direction = 1,
                        labels = scales::label_percent(), name = "Under 5 prevalence")+
   theme_void(base_size = 30)+

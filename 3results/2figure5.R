@@ -55,12 +55,12 @@ OMcases_fig3 = bind_rows(OMcases_ExtU5,OMcases_Ext5to10,OMcases_Ext10to100) %>%
   mutate(age=factor(age,levels = c("10-100","5-10","0-5")),
          ExtLabel=ifelse(Extension=="Demo","Alibori+Atacora","Borgou+Collines\n+Donga"),
          scenLabel=case_when(scenario=="planned"~"Planned\ninterventions",
-                             scenario=="Demo"~"Demographic\nextension",
-                             TRUE~"Geographic\nextension"),
+                             scenario=="Demo"~"Planned\ninterventions\n+ Demographic\nextension",
+                             TRUE~"Planned\ninterventions\n+ Geographic\nextension"),
          scenLabel=factor(scenLabel,
                           levels=c("Planned\ninterventions",
-                                   "Demographic\nextension",
-                                   "Geographic\nextension")))
+                                   "Planned\ninterventions\n+ Demographic\nextension",
+                                   "Planned\ninterventions\n+ Geographic\nextension")))
 
 ####### nSevere
 
@@ -104,12 +104,12 @@ nSevere_fig3 = bind_rows(nSevere_ExtU5,nSevere_Ext5to10,nSevere_Ext10to100) %>%
   mutate(age=factor(age,levels = c("10-100","5-10","0-5")),
          ExtLabel=ifelse(Extension=="Demo","Alibori+Atacora","Borgou+Collines\n+Donga"),
          scenLabel=case_when(scenario=="planned"~"Planned\ninterventions",
-                             scenario=="Demo"~"Demographic\nextension",
-                             TRUE~"Geographic\nextension"),
+                             scenario=="Demo"~"Planned\ninterventions\n+ Demographic\nextension",
+                             TRUE~"Planned\ninterventions\n+ Geographic\nextension"),
          scenLabel=factor(scenLabel,
                           levels=c("Planned\ninterventions",
-                                   "Demographic\nextension",
-                                   "Geographic\nextension")))
+                                   "Planned\ninterventions\n+ Demographic\nextension",
+                                   "Planned\ninterventions\n+ Geographic\nextension")))
 
 
 ##### general settings

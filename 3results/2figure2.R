@@ -53,16 +53,16 @@ scenarios <- futrs %>%
                                    PMC ~ "PMC pilot projects",
                                    TRUE ~ NA),
          scenario = case_when(scenario == "planned" ~ "Planned interventions",
-                               scenario == "Demo" ~ "Planned interventions +\nDemographic extension",
-                               scenario == "Geo" ~ "Planned interventions +\nGeographic extension")) %>%
+                               scenario == "Demo" ~ "Planned interventions\n+ Demographic extension",
+                               scenario == "Geo" ~ "Planned interventions\n+ Geographic extension")) %>%
   mutate(interventions = factor(interventions, levels = c("PMC pilot projects",
                                                           "SMC in children under 5",
                                                           "SMC in children under 10")),
          scenario = factor(scenario, levels = c("Planned interventions",
-                                                "Planned interventions +\nDemographic extension",
-                                                "Planned interventions +\nGeographic extension"))) %>%
+                                                "Planned interventions\n+ Demographic extension",
+                                                "Planned interventions\n+ Geographic extension"))) %>%
   mutate(Department_name = ifelse((scenario == "Planned interventions" & sub %in% sub_Demoextension)|
-                               (scenario == "Planned interventions +\nGeographic extension" & sub %in% sub_Geoextension),
+                               (scenario == "Planned interventions\n+ Geographic extension" & sub %in% sub_Geoextension),
                              Admin1,""))
 
 Admin2_shp_scenarios <- Admin2_shp %>%

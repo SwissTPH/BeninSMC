@@ -74,7 +74,7 @@ figure6a <- ggplot(avertedplanned_OMcases_Ext %>%
   geom_col(alpha=c_alpha)+
   geom_errorbar(width=.5)+
   labs(title="All averted episodes\nper thousand")+
-  scale_y_continuous(limits=c(-50,850))+
+  scale_y_continuous(limits=c(-50,900))+
   scale_fill_manual(values=c(color_demo,color_geo),name="Extension")+
   theme_minimal(base_size = b_size)+
   theme(axis.title.y=element_blank(),axis.title.x=element_blank(),
